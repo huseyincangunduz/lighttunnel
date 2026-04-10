@@ -1,4 +1,4 @@
-# deneme-proxy
+# Lighttunnel Proxy/Client
 
 NAT arkasındaki sunucuları internete açmak için hafif bir ters proxy tüneli.  
 Client sunucular **proxy'ye** TLS TCP ile outbound bağlanır; proxy gelen HTTP isteklerini ilgili client'a yönlendirir.
