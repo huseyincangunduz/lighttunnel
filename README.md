@@ -18,19 +18,26 @@ bash generate_certs.sh
 # certs/ dizinine ca.crt, server.crt/key, client.crt/key üretir
 ```
 
-### 2. Proxy Sunucusunu Başlat
+### 2. Derle
+
+```bash
+npm install
+npm run build
+```
+
+### 3. Proxy Sunucusunu Başlat
 
 ```bash
 env $(cat proxy.env | grep -v '^#') node dist/proxy-server.js
 ```
 
-### 3. Client Sunucuyu Başlat (her sunucu için ayrı ayrı)
+### 4. Client Sunucuyu Başlat (her sunucu için ayrı ayrı)
 
 ```bash
 env $(cat client-server.env | grep -v '^#') node dist/client-server.js
 ```
 
-### 4. İstek At
+### 5. İstek At
 
 ```bash
 curl http://<proxy-host>:12180/services/<SERVICE_NAME>/api/v1/foo
@@ -84,3 +91,5 @@ Mesaj tipleri: `REGISTER` · `REGISTER_ACK` · `REQUEST` · `RESPONSE` · `PING`
 npm install
 npm run build   # dist/ altına derler
 ```
+
+> `npm run start:proxy` ve `npm run start:client` scriptleri build adımını otomatik olarak çalıştırır.
