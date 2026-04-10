@@ -113,9 +113,32 @@ export class ProxyTcpListener {
 
   // ─── Bağlantı yönetimi ───────────────────────────────────────────────────
 
+  /** Kalp atışı: her 30s'de PING gönder, 60s içinde PONG gelmezse kes */
+  private static readonly PING_INTERVAL_MS = 30_000;
+  private static readonly PING_TIMEOUT_MS = 60_000;
+
   private handleClient(socket: tls.TLSSocket): void {
     const decoder = new FrameDecoder();
     let client: ConnectedClient | null = null;
+    let lastPong = Date.now();
+
+    // OS düzeyinde TCP keepalive – uzun sessizliklerde çekirdek probe gönderir
+    socket.setKeepAlive(true, 15_000);
+
+    // Uygulama düzeyinde heartbeat
+    const pingInterval = setInterval(() => {
+      if (Date.now() - lastPong > ProxyTcpListener.PING_TIMEOUT_MS) {
+        console.warn(
+          `[ProxyTcpListener] Heartbeat zaman aşımı${client ? ` ("${client.serviceName}" id=${client.id})` : ""}, bağlantı kapatılıyor.`,
+        );
+        clearInterval(pingInterval);
+        socket.destroy();
+        return;
+      }
+      if (!socket.destroyed) {
+        socket.write(encodeMessage({ type: "PING" }));
+      }
+    }, ProxyTcpListener.PING_INTERVAL_MS);
 
     console.log(
       `[ProxyTcpListener] Yeni bağlantı: ${socket.remoteAddress}:${socket.remotePort}`,
@@ -140,12 +163,16 @@ export class ProxyTcpListener {
             console.warn(
               "[ProxyTcpListener] İlk mesaj REGISTER değil, bağlantı kapatılıyor.",
             );
+            clearInterval(pingInterval);
             socket.destroy();
           }
           return;
         }
 
-        if (msg.header.type === "PONG") return;
+        if (msg.header.type === "PONG") {
+          lastPong = Date.now();
+          return;
+        }
 
         if (msg.header.type === "RESPONSE" && msg.header.requestId) {
           const pending = client!.pending.get(msg.header.requestId);
@@ -159,6 +186,7 @@ export class ProxyTcpListener {
     });
 
     socket.on("close", () => {
+      clearInterval(pingInterval);
       if (client) {
         this.unregisterClient(client);
         console.log(

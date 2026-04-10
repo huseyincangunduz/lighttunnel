@@ -71,6 +71,9 @@ export class ClientTcpConnection {
 
     this.socket = socket;
 
+    // OS düzeyinde TCP keepalive
+    socket.setKeepAlive(true, 15_000);
+
     socket.once("secureConnect", () => {
       console.log(`[ClientTcpConnection] TLS bağlantısı kuruldu.`);
       // Servis adını kaydet
