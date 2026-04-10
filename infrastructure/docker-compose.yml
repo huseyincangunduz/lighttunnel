@@ -1,0 +1,37 @@
+services:
+
+  proxy-server:
+    image: hcangunduz/lighttunnel-proxy:latest
+    build:
+      context: ..
+      dockerfile: Dockerfile.proxy
+    ports:
+      - "12180:12180"
+      - "14400:14400"
+    environment:
+      - TCP_LISTEN_HOST=0.0.0.0
+      - TCP_LISTEN_PORT=14400
+      - TLS_CA=/app/certs/ca.crt
+      - TLS_CERT=/app/certs/server.crt
+      - TLS_KEY=/app/certs/server.key
+      - PROXY_PORT=12180
+    volumes:
+      - ./certs:/app/certs
+
+  client-server:
+    image: hcangunduz/lighttunnel-client:latest
+    build:
+      context: ..
+      dockerfile: Dockerfile.client
+    environment:
+      - PROXY_HOST=proxy-server
+      - PROXY_TCP_PORT=14400
+      - TLS_CA=/app/certs/ca.crt
+      - TLS_CERT=/app/certs/client.crt
+      - TLS_KEY=/app/certs/client.key
+      - SERVICE_NAME=my-service
+      - BACKEND_URL=http://localhost:5500
+    volumes:
+      - ./certs:/app/certs
+    depends_on:
+      - proxy-server

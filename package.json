@@ -1,0 +1,22 @@
+{
+  "name": "deneme-proxy",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start:proxy": "npm run build && tools/devserve.sh dist/proxy-server.js",
+    "start:client": "npm run build && tools/devserve.sh dist/client-server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "fastify": "^5.3.2",
+    "undici": "^7.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
